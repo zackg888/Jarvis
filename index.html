@@ -1011,6 +1011,8 @@ function deleteTrade(id) { S.deleteTrade(id); renderTrading(); showToast('TRADE 
 
 function openModal(id) { document.getElementById(id).classList.add('open'); }
 function closeModal(id) { document.getElementById(id).classList.remove('open'); }
+function openAddTask() { openModal('modalTask'); document.getElementById('taskNameInput').value = ''; document.getElementById('taskCategory').value = 'fitness'; selectedFreq = 'daily'; document.querySelectorAll('.chip').forEach(c => c.classList.remove('selected')); document.querySelector('[data-freq="daily"]').classList.add('selected'); }
+function openAddTrade() { openModal('modalTrade'); document.getElementById('tradeTicker').value = ''; document.getElementById('tradePnl').value = ''; document.getElementById('tradeR').value = ''; document.getElementById('tradeSetup').value = ''; document.getElementById('tradeNotes').value = ''; selectedMood = ''; document.querySelectorAll('.mood-btn').forEach(b => b.classList.remove('selected')); }
 
 document.querySelectorAll('.modal-overlay').forEach(o => {
   o.addEventListener('click', (e) => { if (e.target === o) closeModal(o.id); });
@@ -1192,7 +1194,6 @@ function importSync() {
     reader.readAsText(file);
   };
   input.click();
-}
 }
 
 renderDashboard();
