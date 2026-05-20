@@ -1,0 +1,2189 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+<meta name="apple-mobile-web-app-capable" content="yes" />
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+<meta name="apple-mobile-web-app-title" content="JARVIS" />
+<meta name="theme-color" content="#000000" />
+<title>JARVIS</title>
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600;700;900&family=Rajdhani:wght@300;400;500;600&display=swap" rel="stylesheet" />
+<style>
+  :root {
+    --arc: #00d4ff;
+    --arc2: #0088cc;
+    --arc-glow: rgba(0,212,255,0.25);
+    --arc-dim: rgba(0,212,255,0.08);
+    --danger: #ff4444;
+    --success: #00ff88;
+    --gold: #ffd700;
+    --warn: #ff8c00;
+    --bg: #030912;
+    --bg2: #060f1a;
+    --bg3: #0a1628;
+    --bg4: #0d1f35;
+    --border: rgba(0,212,255,0.18);
+    --border2: rgba(0,212,255,0.08);
+    --text: #e8f4ff;
+    --text2: #7ab8d4;
+    --text3: #3a6a85;
+    --card: rgba(6,15,26,0.92);
+    --font-head: 'Orbitron', monospace;
+    --font-body: 'Rajdhani', sans-serif;
+    --safe-top: env(safe-area-inset-top, 44px);
+    --safe-bottom: env(safe-area-inset-bottom, 20px);
+  }
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  html, body {
+    height: 100%;
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--font-body);
+    font-size: 16px;
+    overflow: hidden;
+    -webkit-font-smoothing: antialiased;
+    -webkit-tap-highlight-color: transparent;
+    user-select: none;
+  }
+
+  /* SCANLINES OVERLAY */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background: repeating-linear-gradient(
+      0deg,
+      transparent,
+      transparent 2px,
+      rgba(0,212,255,0.012) 2px,
+      rgba(0,212,255,0.012) 4px
+    );
+    pointer-events: none;
+    z-index: 9999;
+  }
+
+  /* CORNER BRACKETS */
+  body::after {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background:
+      linear-gradient(to right, var(--arc) 2px, transparent 2px) 0 0 / 20px 20px no-repeat,
+      linear-gradient(to bottom, var(--arc) 2px, transparent 2px) 0 0 / 20px 20px no-repeat,
+      linear-gradient(to left, var(--arc) 2px, transparent 2px) 100% 0 / 20px 20px no-repeat,
+      linear-gradient(to bottom, var(--arc) 2px, transparent 2px) 100% 0 / 20px 20px no-repeat,
+      linear-gradient(to right, var(--arc) 2px, transparent 2px) 0 100% / 20px 20px no-repeat,
+      linear-gradient(to top, var(--arc) 2px, transparent 2px) 0 100% / 20px 20px no-repeat,
+      linear-gradient(to left, var(--arc) 2px, transparent 2px) 100% 100% / 20px 20px no-repeat,
+      linear-gradient(to top, var(--arc) 2px, transparent 2px) 100% 100% / 20px 20px no-repeat;
+    pointer-events: none;
+    z-index: 9998;
+    opacity: 0.5;
+  }
+
+  #app {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    padding-top: var(--safe-top);
+    padding-bottom: var(--safe-bottom);
+    overflow: hidden;
+  }
+
+  /* ====== HEADER ====== */
+  #header {
+    flex-shrink: 0;
+    padding: 12px 20px 10px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    border-bottom: 1px solid var(--border);
+    background: linear-gradient(180deg, rgba(0,212,255,0.04) 0%, transparent 100%);
+    position: relative;
+  }
+
+  .hud-logo {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .arc-reactor {
+    width: 36px;
+    height: 36px;
+    position: relative;
+    flex-shrink: 0;
+  }
+
+  .arc-reactor svg {
+    width: 100%;
+    height: 100%;
+    animation: rotateArc 8s linear infinite;
+  }
+
+  @keyframes rotateArc {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
+  }
+
+  .arc-core {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 12px;
+    height: 12px;
+    background: var(--arc);
+    border-radius: 50%;
+    box-shadow: 0 0 8px 3px var(--arc), 0 0 20px 6px rgba(0,212,255,0.4);
+    animation: pulse 2s ease-in-out infinite;
+  }
+
+  @keyframes pulse {
+    0%, 100% { transform: translate(-50%, -50%) scale(1); opacity: 1; }
+    50% { transform: translate(-50%, -50%) scale(1.2); opacity: 0.8; }
+  }
+
+  .logo-text {
+    font-family: var(--font-head);
+    font-size: 22px;
+    font-weight: 900;
+    letter-spacing: 6px;
+    color: var(--arc);
+    text-shadow: 0 0 20px rgba(0,212,255,0.6), 0 0 40px rgba(0,212,255,0.2);
+    line-height: 1;
+  }
+
+  .logo-sub {
+    font-family: var(--font-body);
+    font-size: 10px;
+    letter-spacing: 3px;
+    color: var(--text3);
+    margin-top: 2px;
+  }
+
+  .header-date {
+    text-align: right;
+  }
+
+  .date-day {
+    font-family: var(--font-head);
+    font-size: 13px;
+    color: var(--arc);
+    letter-spacing: 2px;
+  }
+
+  .date-time {
+    font-size: 11px;
+    color: var(--text3);
+    letter-spacing: 1px;
+    font-family: var(--font-head);
+  }
+
+  /* ====== SCROLL CONTENT ====== */
+  #content {
+    flex: 1;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+    scroll-behavior: smooth;
+  }
+
+  #content::-webkit-scrollbar { display: none; }
+
+  .view { display: none; padding: 16px 16px 24px; animation: fadeIn 0.3s ease; }
+  .view.active { display: block; }
+
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translateY(8px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  /* ====== NAV ====== */
+  #nav {
+    flex-shrink: 0;
+    display: flex;
+    align-items: stretch;
+    border-top: 1px solid var(--border);
+    background: var(--bg2);
+  }
+
+  .nav-btn {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 10px 4px 10px;
+    gap: 4px;
+    background: none;
+    border: none;
+    color: var(--text3);
+    font-family: var(--font-head);
+    font-size: 8px;
+    letter-spacing: 1.5px;
+    cursor: pointer;
+    transition: all 0.2s;
+    position: relative;
+  }
+
+  .nav-btn::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 10%; right: 10%;
+    height: 2px;
+    background: var(--arc);
+    transform: scaleX(0);
+    transition: transform 0.2s;
+    border-radius: 0 0 2px 2px;
+    box-shadow: 0 0 8px var(--arc);
+  }
+
+  .nav-btn.active { color: var(--arc); }
+  .nav-btn.active::before { transform: scaleX(1); }
+
+  .nav-icon {
+    width: 22px;
+    height: 22px;
+    stroke: currentColor;
+    fill: none;
+    stroke-width: 1.5;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+  }
+
+  /* ====== SECTION HEADERS ====== */
+  .section-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 14px;
+  }
+
+  .section-title {
+    font-family: var(--font-head);
+    font-size: 11px;
+    letter-spacing: 3px;
+    color: var(--arc);
+    text-transform: uppercase;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .section-title::before {
+    content: '';
+    display: block;
+    width: 18px;
+    height: 2px;
+    background: var(--arc);
+    box-shadow: 0 0 6px var(--arc);
+  }
+
+  .section-divider {
+    height: 1px;
+    background: linear-gradient(90deg, var(--arc) 0%, transparent 100%);
+    margin: 20px 0;
+    opacity: 0.3;
+  }
+
+  /* ====== CARDS ====== */
+  .card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 14px;
+    margin-bottom: 10px;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .card::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, var(--arc), transparent);
+    opacity: 0.4;
+  }
+
+  .card-glow {
+    position: absolute;
+    top: 0; left: 0;
+    width: 60px; height: 60px;
+    background: radial-gradient(circle, var(--arc-glow), transparent 70%);
+    pointer-events: none;
+  }
+
+  /* ====== STAT GRID ====== */
+  .stat-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+    margin-bottom: 16px;
+  }
+
+  .stat-card {
+    background: var(--bg3);
+    border: 1px solid var(--border2);
+    border-radius: 8px;
+    padding: 14px 12px;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .stat-card.accent { border-color: rgba(0,212,255,0.3); background: rgba(0,212,255,0.04); }
+  .stat-card.success { border-color: rgba(0,255,136,0.3); background: rgba(0,255,136,0.04); }
+  .stat-card.danger { border-color: rgba(255,68,68,0.3); background: rgba(255,68,68,0.04); }
+  .stat-card.gold { border-color: rgba(255,215,0,0.3); background: rgba(255,215,0,0.04); }
+
+  .stat-label {
+    font-family: var(--font-head);
+    font-size: 8px;
+    letter-spacing: 2px;
+    color: var(--text3);
+    margin-bottom: 6px;
+    text-transform: uppercase;
+  }
+
+  .stat-value {
+    font-family: var(--font-head);
+    font-size: 28px;
+    font-weight: 900;
+    line-height: 1;
+  }
+
+  .stat-card.accent .stat-value { color: var(--arc); text-shadow: 0 0 12px rgba(0,212,255,0.5); }
+  .stat-card.success .stat-value { color: var(--success); text-shadow: 0 0 12px rgba(0,255,136,0.5); }
+  .stat-card.danger .stat-value { color: var(--danger); text-shadow: 0 0 12px rgba(255,68,68,0.5); }
+  .stat-card.gold .stat-value { color: var(--gold); text-shadow: 0 0 12px rgba(255,215,0,0.4); }
+
+  .stat-sub {
+    font-size: 11px;
+    color: var(--text3);
+    margin-top: 4px;
+    letter-spacing: 0.5px;
+  }
+
+  /* ====== TASK ITEMS ====== */
+  .task-item {
+    background: var(--bg3);
+    border: 1px solid var(--border2);
+    border-radius: 8px;
+    padding: 14px;
+    margin-bottom: 8px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    transition: all 0.2s;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .task-item.done {
+    border-color: rgba(0,255,136,0.25);
+    background: rgba(0,255,136,0.03);
+  }
+
+  .task-check {
+    width: 28px;
+    height: 28px;
+    border-radius: 6px;
+    border: 2px solid var(--border);
+    background: transparent;
+    cursor: pointer;
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s;
+    -webkit-appearance: none;
+  }
+
+  .task-item.done .task-check {
+    background: var(--success);
+    border-color: var(--success);
+    box-shadow: 0 0 10px rgba(0,255,136,0.4);
+  }
+
+  .check-mark {
+    width: 14px;
+    height: 14px;
+    stroke: var(--bg);
+    fill: none;
+    stroke-width: 2.5;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+    opacity: 0;
+    transform: scale(0.5);
+    transition: all 0.2s;
+  }
+
+  .task-item.done .check-mark {
+    opacity: 1;
+    transform: scale(1);
+  }
+
+  .task-info { flex: 1; min-width: 0; }
+
+  .task-name {
+    font-size: 15px;
+    font-weight: 500;
+    color: var(--text);
+    letter-spacing: 0.3px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .task-item.done .task-name {
+    color: var(--text3);
+    text-decoration: line-through;
+    text-decoration-color: rgba(0,255,136,0.4);
+  }
+
+  .task-meta {
+    font-size: 11px;
+    color: var(--text3);
+    margin-top: 2px;
+    display: flex;
+    gap: 8px;
+    align-items: center;
+  }
+
+  .streak-badge {
+    font-family: var(--font-head);
+    font-size: 10px;
+    padding: 2px 6px;
+    border-radius: 3px;
+    background: rgba(255,140,0,0.15);
+    border: 1px solid rgba(255,140,0,0.3);
+    color: var(--warn);
+    letter-spacing: 1px;
+  }
+
+  .streak-badge.hot {
+    background: rgba(255,68,68,0.15);
+    border-color: rgba(255,68,68,0.3);
+    color: var(--danger);
+    animation: flicker 1.5s ease-in-out infinite;
+  }
+
+  @keyframes flicker {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.7; }
+  }
+
+  /* PROGRESS BAR */
+  .progress-wrap {
+    margin: 6px 0 14px;
+  }
+
+  .progress-label {
+    display: flex;
+    justify-content: space-between;
+    font-size: 10px;
+    color: var(--text3);
+    font-family: var(--font-head);
+    letter-spacing: 1px;
+    margin-bottom: 5px;
+  }
+
+  .progress-bar {
+    height: 4px;
+    background: var(--bg4);
+    border-radius: 2px;
+    overflow: hidden;
+    position: relative;
+  }
+
+  .progress-fill {
+    height: 100%;
+    background: linear-gradient(90deg, var(--arc2), var(--arc));
+    border-radius: 2px;
+    transition: width 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+    box-shadow: 0 0 8px rgba(0,212,255,0.5);
+    position: relative;
+  }
+
+  .progress-fill::after {
+    content: '';
+    position: absolute;
+    right: 0; top: 0; bottom: 0;
+    width: 20px;
+    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.4));
+    animation: shimmer 2s ease-in-out infinite;
+  }
+
+  @keyframes shimmer {
+    0%, 100% { opacity: 0; }
+    50% { opacity: 1; }
+  }
+
+  /* ====== BUTTONS ====== */
+  .btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    padding: 10px 18px;
+    border-radius: 6px;
+    font-family: var(--font-head);
+    font-size: 10px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    cursor: pointer;
+    border: none;
+    transition: all 0.2s;
+    -webkit-appearance: none;
+  }
+
+  .btn-primary {
+    background: linear-gradient(135deg, var(--arc2), var(--arc));
+    color: var(--bg);
+    font-weight: 700;
+    box-shadow: 0 4px 15px rgba(0,212,255,0.3);
+  }
+
+  .btn-primary:active { transform: scale(0.97); box-shadow: 0 2px 8px rgba(0,212,255,0.2); }
+
+  .btn-ghost {
+    background: transparent;
+    color: var(--arc);
+    border: 1px solid var(--border);
+  }
+
+  .btn-ghost:active { background: var(--arc-dim); }
+
+  .btn-danger {
+    background: rgba(255,68,68,0.1);
+    color: var(--danger);
+    border: 1px solid rgba(255,68,68,0.3);
+  }
+
+  .btn-success {
+    background: rgba(0,255,136,0.1);
+    color: var(--success);
+    border: 1px solid rgba(0,255,136,0.3);
+  }
+
+  .btn-full { width: 100%; margin-top: 8px; }
+
+  /* ====== FORMS ====== */
+  .field {
+    margin-bottom: 14px;
+  }
+
+  .field-label {
+    font-family: var(--font-head);
+    font-size: 9px;
+    letter-spacing: 2px;
+    color: var(--text3);
+    text-transform: uppercase;
+    margin-bottom: 6px;
+    display: block;
+  }
+
+  .field input,
+  .field select,
+  .field textarea {
+    width: 100%;
+    background: var(--bg4);
+    border: 1px solid var(--border2);
+    border-radius: 6px;
+    padding: 11px 13px;
+    color: var(--text);
+    font-family: var(--font-body);
+    font-size: 15px;
+    outline: none;
+    transition: border-color 0.2s;
+    -webkit-appearance: none;
+    appearance: none;
+  }
+
+  .field input:focus,
+  .field select:focus,
+  .field textarea:focus {
+    border-color: var(--arc);
+    background: rgba(0,212,255,0.04);
+    box-shadow: 0 0 0 2px rgba(0,212,255,0.08);
+  }
+
+  .field select {
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%2300d4ff' stroke-width='2'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 12px center;
+    padding-right: 36px;
+  }
+
+  .field textarea {
+    resize: none;
+    min-height: 90px;
+    line-height: 1.5;
+  }
+
+  /* ====== MOOD SELECTOR ====== */
+  .mood-grid {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 6px;
+  }
+
+  .mood-btn {
+    aspect-ratio: 1;
+    border-radius: 6px;
+    border: 1px solid var(--border2);
+    background: var(--bg4);
+    color: var(--text2);
+    font-size: 11px;
+    font-family: var(--font-head);
+    cursor: pointer;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 4px;
+    transition: all 0.15s;
+    letter-spacing: 0.5px;
+    padding: 8px 4px;
+    -webkit-appearance: none;
+  }
+
+  .mood-btn.selected {
+    border-color: var(--arc);
+    background: rgba(0,212,255,0.1);
+    color: var(--arc);
+    box-shadow: 0 0 10px rgba(0,212,255,0.15);
+  }
+
+  .mood-dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    flex-shrink: 0;
+  }
+
+  /* ====== TRADE ITEMS ====== */
+  .trade-item {
+    background: var(--bg3);
+    border: 1px solid var(--border2);
+    border-radius: 8px;
+    padding: 14px;
+    margin-bottom: 8px;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .trade-item.profit { border-left: 3px solid var(--success); }
+  .trade-item.loss { border-left: 3px solid var(--danger); }
+  .trade-item.breakeven { border-left: 3px solid var(--text3); }
+
+  .trade-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 8px;
+  }
+
+  .trade-ticker {
+    font-family: var(--font-head);
+    font-size: 16px;
+    font-weight: 700;
+    color: var(--arc);
+    letter-spacing: 2px;
+  }
+
+  .trade-pnl {
+    font-family: var(--font-head);
+    font-size: 18px;
+    font-weight: 900;
+  }
+
+  .trade-pnl.pos { color: var(--success); text-shadow: 0 0 10px rgba(0,255,136,0.4); }
+  .trade-pnl.neg { color: var(--danger); text-shadow: 0 0 10px rgba(255,68,68,0.4); }
+
+  .trade-tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 5px;
+    margin-bottom: 8px;
+  }
+
+  .tag {
+    font-family: var(--font-head);
+    font-size: 9px;
+    letter-spacing: 1.5px;
+    padding: 3px 7px;
+    border-radius: 3px;
+    background: var(--bg4);
+    border: 1px solid var(--border2);
+    color: var(--text3);
+    text-transform: uppercase;
+  }
+
+  .trade-note {
+    font-size: 13px;
+    color: var(--text2);
+    line-height: 1.6;
+    border-top: 1px solid var(--border2);
+    padding-top: 8px;
+    margin-top: 4px;
+  }
+
+  .trade-date {
+    font-family: var(--font-head);
+    font-size: 9px;
+    letter-spacing: 1.5px;
+    color: var(--text3);
+    margin-top: 8px;
+  }
+
+  /* ====== MODAL ====== */
+  .modal-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.85);
+    backdrop-filter: blur(4px);
+    z-index: 1000;
+    display: none;
+    align-items: flex-end;
+    padding: 0;
+  }
+
+  .modal-overlay.open { display: flex; animation: overlayIn 0.2s ease; }
+
+  @keyframes overlayIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+  }
+
+  .modal-sheet {
+    background: var(--bg2);
+    border-top: 1px solid var(--border);
+    border-radius: 20px 20px 0 0;
+    padding: 20px 16px;
+    padding-bottom: calc(20px + var(--safe-bottom));
+    width: 100%;
+    max-height: 90vh;
+    overflow-y: auto;
+    animation: sheetUp 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+    position: relative;
+  }
+
+  @keyframes sheetUp {
+    from { transform: translateY(100%); }
+    to { transform: translateY(0); }
+  }
+
+  .modal-sheet::-webkit-scrollbar { display: none; }
+
+  .modal-handle {
+    width: 36px; height: 4px;
+    background: var(--border);
+    border-radius: 2px;
+    margin: 0 auto 20px;
+  }
+
+  .modal-title {
+    font-family: var(--font-head);
+    font-size: 14px;
+    letter-spacing: 3px;
+    color: var(--arc);
+    margin-bottom: 18px;
+    text-align: center;
+  }
+
+  /* ====== CHART ====== */
+  .mini-chart {
+    height: 80px;
+    position: relative;
+    margin: 10px 0;
+  }
+
+  .chart-bars {
+    display: flex;
+    align-items: flex-end;
+    height: 100%;
+    gap: 3px;
+  }
+
+  .chart-bar {
+    flex: 1;
+    border-radius: 3px 3px 0 0;
+    min-height: 4px;
+    position: relative;
+    transition: all 0.3s;
+  }
+
+  .chart-bar.pos { background: linear-gradient(0deg, rgba(0,255,136,0.3), rgba(0,255,136,0.8)); }
+  .chart-bar.neg { background: linear-gradient(0deg, rgba(255,68,68,0.3), rgba(255,68,68,0.8)); }
+  .chart-bar.zero { background: var(--border2); }
+
+  /* ====== JARVIS PANEL ====== */
+  .jarvis-panel {
+    background: var(--bg3);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 16px;
+    margin-bottom: 14px;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .jarvis-panel::before {
+    content: '';
+    position: absolute;
+    top: -30px; right: -30px;
+    width: 100px; height: 100px;
+    background: radial-gradient(circle, rgba(0,212,255,0.06), transparent 70%);
+  }
+
+  .jarvis-prompt {
+    display: flex;
+    gap: 10px;
+    align-items: flex-end;
+  }
+
+  .jarvis-input {
+    flex: 1;
+    background: var(--bg4);
+    border: 1px solid var(--border2);
+    border-radius: 20px;
+    padding: 10px 16px;
+    color: var(--text);
+    font-family: var(--font-body);
+    font-size: 14px;
+    outline: none;
+    -webkit-appearance: none;
+  }
+
+  .jarvis-input:focus {
+    border-color: var(--arc);
+    box-shadow: 0 0 0 2px rgba(0,212,255,0.08);
+  }
+
+  .jarvis-send {
+    width: 42px; height: 42px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, var(--arc2), var(--arc));
+    border: none;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    box-shadow: 0 4px 12px rgba(0,212,255,0.3);
+    -webkit-appearance: none;
+  }
+
+  .jarvis-send:active { transform: scale(0.95); }
+
+  .jarvis-messages {
+    max-height: 200px;
+    overflow-y: auto;
+    margin-bottom: 12px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .jarvis-messages::-webkit-scrollbar { display: none; }
+
+  .msg {
+    padding: 10px 13px;
+    border-radius: 12px;
+    font-size: 14px;
+    line-height: 1.5;
+    max-width: 88%;
+    letter-spacing: 0.2px;
+  }
+
+  .msg.jarvis {
+    background: rgba(0,212,255,0.07);
+    border: 1px solid rgba(0,212,255,0.15);
+    color: var(--arc);
+    font-family: var(--font-body);
+    align-self: flex-start;
+    border-radius: 4px 12px 12px 12px;
+  }
+
+  .msg.user {
+    background: var(--bg4);
+    color: var(--text);
+    align-self: flex-end;
+    border-radius: 12px 4px 12px 12px;
+  }
+
+  .jarvis-name {
+    font-family: var(--font-head);
+    font-size: 11px;
+    letter-spacing: 2px;
+    color: var(--arc);
+    margin-bottom: 10px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  .jarvis-name::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: linear-gradient(90deg, var(--arc), transparent);
+    opacity: 0.3;
+  }
+
+  .jarvis-online {
+    width: 6px; height: 6px;
+    background: var(--success);
+    border-radius: 50%;
+    animation: pulse 2s ease-in-out infinite;
+    box-shadow: 0 0 6px var(--success);
+  }
+
+  /* ====== REPEAT CHIPS ====== */
+  .repeat-chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin-top: 4px;
+  }
+
+  .chip {
+    padding: 6px 12px;
+    border-radius: 4px;
+    border: 1px solid var(--border2);
+    background: var(--bg4);
+    color: var(--text3);
+    font-family: var(--font-head);
+    font-size: 9px;
+    letter-spacing: 1.5px;
+    cursor: pointer;
+    transition: all 0.15s;
+    -webkit-appearance: none;
+  }
+
+  .chip.selected {
+    border-color: var(--arc);
+    background: rgba(0,212,255,0.1);
+    color: var(--arc);
+  }
+
+  /* ====== WEEKLY GRID ====== */
+  .week-grid {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: 4px;
+  }
+
+  .week-day {
+    aspect-ratio: 1;
+    border-radius: 4px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 3px;
+    border: 1px solid var(--border2);
+    background: var(--bg4);
+    font-size: 9px;
+    font-family: var(--font-head);
+    letter-spacing: 0.5px;
+    color: var(--text3);
+    position: relative;
+  }
+
+  .week-day.done { background: rgba(0,255,136,0.08); border-color: rgba(0,255,136,0.25); }
+  .week-day.today { border-color: var(--arc); color: var(--arc); box-shadow: 0 0 8px rgba(0,212,255,0.2); }
+
+  .day-dot {
+    width: 5px; height: 5px;
+    border-radius: 50%;
+    background: var(--text3);
+  }
+
+  .week-day.done .day-dot { background: var(--success); box-shadow: 0 0 4px var(--success); }
+  .week-day.today .day-dot { background: var(--arc); box-shadow: 0 0 4px var(--arc); }
+
+  /* ====== TOAST ====== */
+  #toast {
+    position: fixed;
+    top: calc(var(--safe-top) + 60px);
+    left: 50%;
+    transform: translateX(-50%) translateY(-20px);
+    background: var(--bg3);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 10px 18px;
+    font-family: var(--font-head);
+    font-size: 10px;
+    letter-spacing: 2px;
+    color: var(--arc);
+    z-index: 2000;
+    opacity: 0;
+    transition: all 0.3s;
+    pointer-events: none;
+    white-space: nowrap;
+    box-shadow: 0 4px 20px rgba(0,212,255,0.2);
+  }
+
+  #toast.show {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0);
+  }
+
+  /* ====== EMPTY STATE ====== */
+  .empty-state {
+    text-align: center;
+    padding: 32px 16px;
+    color: var(--text3);
+    font-family: var(--font-head);
+    font-size: 11px;
+    letter-spacing: 2px;
+  }
+
+  .empty-state div {
+    font-size: 24px;
+    margin-bottom: 10px;
+    opacity: 0.4;
+    font-size: 32px;
+  }
+
+  /* ====== DELETE BUTTON ====== */
+  .delete-btn {
+    width: 28px; height: 28px;
+    border-radius: 6px;
+    background: rgba(255,68,68,0.1);
+    border: 1px solid rgba(255,68,68,0.2);
+    color: var(--danger);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    -webkit-appearance: none;
+  }
+
+  .delete-btn:active { background: rgba(255,68,68,0.2); }
+
+  /* ====== EQUITY CURVE ====== */
+  .equity-curve {
+    height: 60px;
+    background: var(--bg4);
+    border-radius: 6px;
+    overflow: hidden;
+    position: relative;
+    margin: 8px 0;
+  }
+
+  .equity-svg {
+    width: 100%;
+    height: 100%;
+  }
+
+  .pnl-input-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+  }
+
+  /* Task delete */
+  .task-actions {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+</style>
+</head>
+<body>
+
+<div id="app">
+  <!-- HEADER -->
+  <div id="header">
+    <div class="hud-logo">
+      <div class="arc-reactor">
+        <svg viewBox="0 0 40 40">
+          <circle cx="20" cy="20" r="18" stroke="rgba(0,212,255,0.2)" stroke-width="1" fill="none"/>
+          <path d="M20 2 A18 18 0 0 1 38 20" stroke="#00d4ff" stroke-width="1.5" fill="none" stroke-linecap="round"/>
+          <path d="M20 38 A18 18 0 0 1 2 20" stroke="rgba(0,212,255,0.3)" stroke-width="1" fill="none" stroke-linecap="round"/>
+          <polygon points="20,8 24,16 32,16 26,22 28,30 20,25 12,30 14,22 8,16 16,16" fill="none" stroke="rgba(0,212,255,0.25)" stroke-width="0.8"/>
+        </svg>
+        <div class="arc-core"></div>
+      </div>
+      <div>
+        <div class="logo-text">JARVIS</div>
+        <div class="logo-sub">TASK INTELLIGENCE</div>
+      </div>
+    </div>
+    <div class="header-date">
+      <div class="date-day" id="headerDate"></div>
+      <div class="date-time" id="headerTime"></div>
+    </div>
+  </div>
+
+  <!-- SCROLLABLE CONTENT -->
+  <div id="content">
+
+    <!-- ====== VIEW: DASHBOARD ====== -->
+    <div id="view-dashboard" class="view active">
+
+      <!-- JARVIS AI PANEL -->
+      <div class="jarvis-panel">
+        <div class="jarvis-name">
+          <div class="jarvis-online"></div>
+          JARVIS ONLINE
+        </div>
+        <div class="jarvis-messages" id="jarvisMessages">
+          <div class="msg jarvis">Good day. All systems operational. How can I assist you, sir?</div>
+        </div>
+        <div class="jarvis-prompt">
+          <input class="jarvis-input" id="jarvisInput" type="text" placeholder="Ask Jarvis anything..." autocomplete="off" />
+          <button class="jarvis-send" onclick="jarvisAsk()">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#000" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+              <line x1="22" y1="2" x2="11" y2="13"></line>
+              <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
+            </svg>
+          </button>
+        </div>
+      </div>
+
+      <!-- DAILY STATS -->
+      <div class="section-header">
+        <div class="section-title">Today's Status</div>
+        <div style="font-family:var(--font-head);font-size:9px;letter-spacing:2px;color:var(--text3)" id="todayDateSmall"></div>
+      </div>
+
+      <div class="stat-grid" id="dashStats">
+        <!-- filled by JS -->
+      </div>
+
+      <!-- TODAY'S PROGRESS -->
+      <div class="section-header" style="margin-top:4px">
+        <div class="section-title">Daily Progress</div>
+      </div>
+
+      <div class="progress-wrap">
+        <div class="progress-label">
+          <span>TASKS COMPLETE</span>
+          <span id="progressLabel">0 / 0</span>
+        </div>
+        <div class="progress-bar">
+          <div class="progress-fill" id="progressFill" style="width:0%"></div>
+        </div>
+      </div>
+
+      <!-- WEEK OVERVIEW -->
+      <div class="section-header">
+        <div class="section-title">This Week</div>
+      </div>
+      <div id="weekOverview" class="week-grid" style="margin-bottom:16px"></div>
+
+      <!-- QUICK TASKS -->
+      <div class="section-header">
+        <div class="section-title">Active Tasks</div>
+        <button class="btn btn-ghost" style="padding:6px 12px;font-size:9px" onclick="openAddTask()">+ ADD</button>
+      </div>
+      <div id="dashTasks"></div>
+
+    </div>
+
+    <!-- ====== VIEW: TASKS ====== -->
+    <div id="view-tasks" class="view">
+      <div class="section-header">
+        <div class="section-title">All Tasks</div>
+        <button class="btn btn-primary" style="padding:8px 14px;font-size:9px" onclick="openAddTask()">+ NEW TASK</button>
+      </div>
+
+      <div id="tasksWeekGrid" style="margin-bottom:16px"></div>
+
+      <div id="allTasksList"></div>
+    </div>
+
+    <!-- ====== VIEW: TRADING ====== -->
+    <div id="view-trading" class="view">
+      <!-- PNL SUMMARY -->
+      <div class="section-header">
+        <div class="section-title">Trading Account</div>
+        <button class="btn btn-primary" style="padding:8px 14px;font-size:9px" onclick="openAddTrade()">+ LOG TRADE</button>
+      </div>
+
+      <div class="stat-grid" id="tradingStats"></div>
+
+      <div class="section-header" style="margin-top:4px">
+        <div class="section-title">PnL Curve</div>
+        <div style="font-family:var(--font-head);font-size:9px;letter-spacing:1px;color:var(--text3)" id="tradeCount"></div>
+      </div>
+
+      <div class="equity-curve" id="equityCurve">
+        <svg class="equity-svg" id="equitySvg" viewBox="0 0 300 60" preserveAspectRatio="none"></svg>
+      </div>
+
+      <div class="section-divider"></div>
+
+      <div class="section-header">
+        <div class="section-title">Trade Log</div>
+      </div>
+
+      <div id="tradeList"></div>
+    </div>
+
+    <!-- ====== VIEW: STATS ====== -->
+    <div id="view-stats" class="view">
+      <div class="section-header">
+        <div class="section-title">Performance</div>
+      </div>
+
+      <div class="stat-grid" id="statsGrid"></div>
+
+      <div class="section-header" style="margin-top:4px">
+        <div class="section-title">Task Breakdown</div>
+      </div>
+
+      <div id="taskBreakdown"></div>
+
+      <div class="section-header" style="margin-top:8px">
+        <div class="section-title">Trading History</div>
+      </div>
+      <div id="statsTrading"></div>
+
+    </div>
+
+  </div><!-- end content -->
+
+  <!-- NAV -->
+  <nav id="nav">
+    <button class="nav-btn active" onclick="showView('dashboard',this)">
+      <svg class="nav-icon" viewBox="0 0 24 24">
+        <rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/>
+        <rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/>
+      </svg>
+      HUB
+    </button>
+    <button class="nav-btn" onclick="showView('tasks',this)">
+      <svg class="nav-icon" viewBox="0 0 24 24">
+        <polyline points="9 11 12 14 22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/>
+      </svg>
+      TASKS
+    </button>
+    <button class="nav-btn" onclick="showView('trading',this)">
+      <svg class="nav-icon" viewBox="0 0 24 24">
+        <polyline points="22 7 13.5 15.5 8.5 10.5 2 17"/><polyline points="16 7 22 7 22 13"/>
+      </svg>
+      TRADES
+    </button>
+    <button class="nav-btn" onclick="showView('stats',this)">
+      <svg class="nav-icon" viewBox="0 0 24 24">
+        <line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/>
+        <line x1="6" y1="20" x2="6" y2="14"/>
+      </svg>
+      STATS
+    </button>
+  </nav>
+
+</div><!-- end app -->
+
+<!-- TOAST -->
+<div id="toast"></div>
+
+<!-- MODAL: ADD TASK -->
+<div class="modal-overlay" id="modalTask">
+  <div class="modal-sheet">
+    <div class="modal-handle"></div>
+    <div class="modal-title">NEW TASK PROTOCOL</div>
+    <div class="field">
+      <label class="field-label">Task Name</label>
+      <input type="text" id="taskNameInput" placeholder="e.g. Hit the gym" />
+    </div>
+    <div class="field">
+      <label class="field-label">Category</label>
+      <select id="taskCategory">
+        <option value="fitness">Fitness</option>
+        <option value="work">Work</option>
+        <option value="study">Study</option>
+        <option value="finance">Finance</option>
+        <option value="health">Health</option>
+        <option value="other">Other</option>
+      </select>
+    </div>
+    <div class="field">
+      <label class="field-label">Repeat Frequency</label>
+      <div class="repeat-chips">
+        <button class="chip selected" data-freq="daily" onclick="selectFreq(this)">DAILY</button>
+        <button class="chip" data-freq="weekdays" onclick="selectFreq(this)">WEEKDAYS</button>
+        <button class="chip" data-freq="3x" onclick="selectFreq(this)">3X / WEEK</button>
+        <button class="chip" data-freq="weekly" onclick="selectFreq(this)">WEEKLY</button>
+      </div>
+    </div>
+    <div class="field">
+      <label class="field-label">Goal Target (days)</label>
+      <input type="number" id="taskTarget" placeholder="30" min="1" max="365" />
+    </div>
+    <button class="btn btn-primary btn-full" onclick="saveTask()">INITIATE TASK</button>
+    <button class="btn btn-ghost btn-full" style="margin-top:6px" onclick="closeModal('modalTask')">CANCEL</button>
+  </div>
+</div>
+
+<!-- MODAL: ADD TRADE -->
+<div class="modal-overlay" id="modalTrade">
+  <div class="modal-sheet">
+    <div class="modal-handle"></div>
+    <div class="modal-title">LOG TRADE</div>
+    <div class="pnl-input-row">
+      <div class="field">
+        <label class="field-label">Ticker / Asset</label>
+        <input type="text" id="tradeTicker" placeholder="TSLA" style="text-transform:uppercase" />
+      </div>
+      <div class="field">
+        <label class="field-label">Direction</label>
+        <select id="tradeDir">
+          <option value="LONG">LONG</option>
+          <option value="SHORT">SHORT</option>
+        </select>
+      </div>
+    </div>
+    <div class="pnl-input-row">
+      <div class="field">
+        <label class="field-label">PnL ($)</label>
+        <input type="number" id="tradePnl" placeholder="+250.00" step="0.01" />
+      </div>
+      <div class="field">
+        <label class="field-label">R Multiple</label>
+        <input type="number" id="tradeR" placeholder="2.0" step="0.1" />
+      </div>
+    </div>
+    <div class="field">
+      <label class="field-label">Setup Type</label>
+      <input type="text" id="tradeSetup" placeholder="e.g. VWAP Reclaim, Breakout..." />
+    </div>
+    <div class="field">
+      <label class="field-label">Emotional State</label>
+      <div class="mood-grid">
+        <button class="mood-btn" data-mood="focused" onclick="selectMood(this)">
+          <div class="mood-dot" style="background:#00d4ff"></div>
+          FOCUSED
+        </button>
+        <button class="mood-btn" data-mood="confident" onclick="selectMood(this)">
+          <div class="mood-dot" style="background:#00ff88"></div>
+          CALM
+        </button>
+        <button class="mood-btn" data-mood="anxious" onclick="selectMood(this)">
+          <div class="mood-dot" style="background:#ffd700"></div>
+          ANXIOUS
+        </button>
+        <button class="mood-btn" data-mood="fomo" onclick="selectMood(this)">
+          <div class="mood-dot" style="background:#ff8c00"></div>
+          FOMO
+        </button>
+        <button class="mood-btn" data-mood="revenge" onclick="selectMood(this)">
+          <div class="mood-dot" style="background:#ff4444"></div>
+          REVENGE
+        </button>
+      </div>
+    </div>
+    <div class="field">
+      <label class="field-label">Trade Journal</label>
+      <textarea id="tradeNotes" placeholder="What was your thesis? What did you do well? What went wrong?"></textarea>
+    </div>
+    <button class="btn btn-primary btn-full" onclick="saveTrade()">RECORD TRADE</button>
+    <button class="btn btn-ghost btn-full" style="margin-top:6px" onclick="closeModal('modalTrade')">CANCEL</button>
+  </div>
+</div>
+
+<script>
+// ============================================================
+//  STATE
+// ============================================================
+const S = (() => {
+  const load = (k, def) => {
+    try { return JSON.parse(localStorage.getItem(k)) || def; } catch { return def; }
+  };
+  const save = (k, v) => localStorage.setItem(k, JSON.stringify(v));
+
+  let tasks = load('jar_tasks', [
+    { id: 1, name: 'Hit the Gym', category: 'fitness', freq: 'daily', target: 30, streak: 0, completions: [] }
+  ]);
+  let trades = load('jar_trades', []);
+  let completions = load('jar_completions', {}); // { "taskId_YYYY-MM-DD": true }
+
+  const today = () => {
+    const d = new Date();
+    return d.toISOString().slice(0, 10);
+  };
+
+  // Inside the S() function, replace the persist function with:
+const GIST_ID = ''; // leave empty for now
+const GITHUB_TOKEN = ''; // leave empty for now
+
+const persist = () => {
+  save('jar_tasks', tasks);
+  save('jar_trades', trades);
+  save('jar_completions', completions);
+  // Try to sync to GitHub Gist
+  if (GIST_ID && GITHUB_TOKEN) {
+    syncToGist();
+  }
+};
+
+async function syncToGist() {
+  const data = { tasks, trades, completions };
+  try {
+    await fetch(`https://api.github.com/gists/${GIST_ID}`, {
+      method: 'PATCH',
+      headers: {
+        'Authorization': `token ${GITHUB_TOKEN}`,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        files: { 'jarvis_data.json': { content: JSON.stringify(data) } }
+      })
+    });
+  } catch (e) { /* silent fail */ }
+}
+
+async function loadFromGist(gistId, token) {
+  try {
+    const res = await fetch(`https://api.github.com/gists/${gistId}`, {
+      headers: { 'Authorization': `token ${token}` }
+    });
+    const gist = await res.json();
+    const content = JSON.parse(gist.files['jarvis_data.json'].content);
+    tasks = content.tasks || tasks;
+    trades = content.trades || trades;
+    completions = content.completions || completions;
+    persist();
+    return true;
+  } catch (e) { return false; }
+}
+
+  const taskDoneToday = (id) => !!completions[`${id}_${today()}`];
+
+  const toggleTask = (id) => {
+    const key = `${id}_${today()}`;
+    if (completions[key]) {
+      delete completions[key];
+    } else {
+      completions[key] = true;
+    }
+    updateStreak(id);
+    persist();
+  };
+
+  const updateStreak = (id) => {
+    const t = tasks.find(x => x.id === id);
+    if (!t) return;
+    let streak = 0;
+    const d = new Date();
+    while (true) {
+      const s = d.toISOString().slice(0, 10);
+      if (completions[`${id}_${s}`]) {
+        streak++;
+        d.setDate(d.getDate() - 1);
+      } else { break; }
+    }
+    t.streak = streak;
+    persist();
+  };
+
+  const addTask = (name, category, freq, target) => {
+    const id = Date.now();
+    tasks.push({ id, name, category, freq, target: parseInt(target) || 30, streak: 0, completions: [] });
+    persist();
+    return id;
+  };
+
+  const deleteTask = (id) => {
+    tasks = tasks.filter(t => t.id !== id);
+    Object.keys(completions).forEach(k => { if (k.startsWith(id + '_')) delete completions[k]; });
+    persist();
+  };
+
+  const addTrade = (data) => {
+    trades.unshift({ id: Date.now(), date: today(), ...data });
+    persist();
+  };
+
+  const deleteTrade = (id) => {
+    trades = trades.filter(t => t.id !== id);
+    persist();
+  };
+
+  const getTodayTasksDone = () => tasks.filter(t => taskDoneToday(t.id)).length;
+  const getTodayTasks = () => tasks.filter(t => isTaskActiveToday(t));
+
+  const isTaskActiveToday = (t) => {
+    const dow = new Date().getDay();
+    if (t.freq === 'daily') return true;
+    if (t.freq === 'weekdays') return dow >= 1 && dow <= 5;
+    if (t.freq === 'weekly') return dow === 1;
+    if (t.freq === '3x') return [1,3,5].includes(dow);
+    return true;
+  };
+
+  const getTodayTrades = () => trades.filter(t => t.date === today());
+  const getTodayPnl = () => getTodayTrades().reduce((a, t) => a + parseFloat(t.pnl || 0), 0);
+  const getTotalPnl = () => trades.reduce((a, t) => a + parseFloat(t.pnl || 0), 0);
+  const getWinRate = () => {
+    if (!trades.length) return 0;
+    return Math.round((trades.filter(t => parseFloat(t.pnl) > 0).length / trades.length) * 100);
+  };
+
+  const getWeek = () => {
+    const days = [];
+    for (let i = 6; i >= 0; i--) {
+      const d = new Date();
+      d.setDate(d.getDate() - i);
+      const s = d.toISOString().slice(0, 10);
+      const done = tasks.filter(t => isTaskActiveToday(t)).filter(t => completions[`${t.id}_${s}`]).length;
+      const total = tasks.filter(t => isTaskActiveToday(t)).length;
+      days.push({ date: s, done, total, isToday: i === 0, dow: d.getDay() });
+    }
+    return days;
+  };
+
+  return {
+    get tasks() { return tasks; },
+    get trades() { return trades; },
+    today,
+    taskDoneToday,
+    toggleTask,
+    addTask,
+    deleteTask,
+    addTrade,
+    deleteTrade,
+    getTodayTasks,
+    getTodayTasksDone,
+    getTodayTrades,
+    getTodayPnl,
+    getTotalPnl,
+    getWinRate,
+    getWeek,
+    isTaskActiveToday,
+    completions
+  };
+})();
+
+// ============================================================
+//  UI STATE
+// ============================================================
+let selectedFreq = 'daily';
+let selectedMood = '';
+
+// ============================================================
+//  CLOCK
+// ============================================================
+const DAYS = ['SUN', 'MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT'];
+const MONTHS = ['JAN','FEB','MAR','APR','MAY','JUN','JUL','AUG','SEP','OCT','NOV','DEC'];
+
+function updateClock() {
+  const d = new Date();
+  const h = String(d.getHours()).padStart(2,'0');
+  const m = String(d.getMinutes()).padStart(2,'0');
+  const s = String(d.getSeconds()).padStart(2,'0');
+  const el = document.getElementById('headerTime');
+  const de = document.getElementById('headerDate');
+  if (el) el.textContent = `${h}:${m}:${s}`;
+  if (de) de.textContent = `${DAYS[d.getDay()]} ${d.getDate()} ${MONTHS[d.getMonth()]}`;
+  const sm = document.getElementById('todayDateSmall');
+  if (sm) sm.textContent = `${DAYS[d.getDay()]} ${d.getDate()} ${MONTHS[d.getMonth()]}`;
+}
+
+setInterval(updateClock, 1000);
+updateClock();
+
+// ============================================================
+//  NAVIGATION
+// ============================================================
+function showView(name, btn) {
+  document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+  document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById('view-' + name).classList.add('active');
+  btn.classList.add('active');
+  renderView(name);
+}
+
+function renderView(name) {
+  if (name === 'dashboard') renderDashboard();
+  if (name === 'tasks') renderTasks();
+  if (name === 'trading') renderTrading();
+  if (name === 'stats') renderStats();
+}
+
+// ============================================================
+//  RENDER DASHBOARD
+// ============================================================
+function renderDashboard() {
+  const today = S.getTodayTasks();
+  const done = today.filter(t => S.taskDoneToday(t.id)).length;
+  const total = today.length;
+  const pct = total ? Math.round((done / total) * 100) : 0;
+  const todayPnl = S.getTodayPnl();
+  const todayTrades = S.getTodayTrades().length;
+
+  // Stats
+  document.getElementById('dashStats').innerHTML = `
+    <div class="stat-card accent">
+      <div class="stat-label">TASKS TODAY</div>
+      <div class="stat-value">${done}/${total}</div>
+      <div class="stat-sub">${pct}% complete</div>
+    </div>
+    <div class="stat-card ${todayPnl >= 0 ? 'success' : 'danger'}">
+      <div class="stat-label">TODAY'S PNL</div>
+      <div class="stat-value">${todayPnl >= 0 ? '+' : ''}${todayPnl.toFixed(0)}</div>
+      <div class="stat-sub">${todayTrades} trade${todayTrades !== 1 ? 's' : ''} logged</div>
+    </div>
+    <div class="stat-card gold">
+      <div class="stat-label">BEST STREAK</div>
+      <div class="stat-value">${Math.max(0, ...S.tasks.map(t => t.streak))}</div>
+      <div class="stat-sub">days in a row</div>
+    </div>
+    <div class="stat-card accent">
+      <div class="stat-label">WIN RATE</div>
+      <div class="stat-value">${S.getWinRate()}<span style="font-size:14px">%</span></div>
+      <div class="stat-sub">${S.trades.length} total trades</div>
+    </div>
+  `;
+
+  // Progress
+  document.getElementById('progressFill').style.width = pct + '%';
+  document.getElementById('progressLabel').textContent = `${done} / ${total}`;
+
+  // Week overview
+  renderWeekGrid('weekOverview');
+
+  // Tasks
+  const activeTasks = S.getTodayTasks();
+  const tasksEl = document.getElementById('dashTasks');
+  if (!activeTasks.length) {
+    tasksEl.innerHTML = '<div class="empty-state"><div>--</div>NO TASKS SCHEDULED</div>';
+  } else {
+    tasksEl.innerHTML = activeTasks.map(t => taskItemHTML(t)).join('');
+  }
+}
+
+function renderWeekGrid(elId) {
+  const week = S.getWeek();
+  const days = ['S','M','T','W','T','F','S'];
+  document.getElementById(elId).innerHTML = week.map(d => `
+    <div class="week-day ${d.done === d.total && d.total > 0 ? 'done' : ''} ${d.isToday ? 'today' : ''}">
+      <div>${days[d.dow]}</div>
+      <div class="day-dot"></div>
+      <div style="font-size:8px">${d.done}/${d.total}</div>
+    </div>
+  `).join('');
+}
+
+function taskItemHTML(t) {
+  const done = S.taskDoneToday(t.id);
+  const streakBadge = t.streak > 0 ? `<span class="streak-badge ${t.streak >= 7 ? 'hot' : ''}">${t.streak}d</span>` : '';
+  const catColors = { fitness: '#ff4444', work: '#00d4ff', study: '#ffd700', finance: '#00ff88', health: '#ff8c00', other: '#7ab8d4' };
+  return `
+    <div class="task-item ${done ? 'done' : ''}" id="ti_${t.id}">
+      <button class="task-check" onclick="toggleTask(${t.id})">
+        <svg class="check-mark" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"></polyline></svg>
+      </button>
+      <div class="task-info">
+        <div class="task-name">${t.name}</div>
+        <div class="task-meta">
+          <span style="color:${catColors[t.category]};font-size:10px;font-family:var(--font-head);letter-spacing:1px">${t.category.toUpperCase()}</span>
+          <span>${t.freq === 'daily' ? 'Every day' : t.freq === 'weekdays' ? 'Weekdays' : t.freq === '3x' ? '3x/week' : 'Weekly'}</span>
+          ${streakBadge}
+        </div>
+      </div>
+      <div class="task-actions">
+        <button class="delete-btn" onclick="deleteTask(${t.id})">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round">
+            <line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line>
+          </svg>
+        </button>
+      </div>
+    </div>
+  `;
+}
+
+// ============================================================
+//  RENDER TASKS
+// ============================================================
+function renderTasks() {
+  renderWeekGrid('tasksWeekGrid');
+  const list = document.getElementById('allTasksList');
+  if (!S.tasks.length) {
+    list.innerHTML = '<div class="empty-state"><div>--</div>NO TASKS CREATED YET</div>';
+    return;
+  }
+  list.innerHTML = S.tasks.map(t => taskItemHTML(t)).join('');
+}
+
+// ============================================================
+//  RENDER TRADING
+// ============================================================
+function renderTrading() {
+  const total = S.getTotalPnl();
+  const todayPnl = S.getTodayPnl();
+  const wins = S.trades.filter(t => parseFloat(t.pnl) > 0).length;
+  const losses = S.trades.filter(t => parseFloat(t.pnl) < 0).length;
+
+  document.getElementById('tradingStats').innerHTML = `
+    <div class="stat-card ${total >= 0 ? 'success' : 'danger'}">
+      <div class="stat-label">TOTAL PNL</div>
+      <div class="stat-value">${total >= 0 ? '+' : ''}${total.toFixed(0)}</div>
+      <div class="stat-sub">all time</div>
+    </div>
+    <div class="stat-card ${todayPnl >= 0 ? 'accent' : 'danger'}">
+      <div class="stat-label">TODAY PNL</div>
+      <div class="stat-value">${todayPnl >= 0 ? '+' : ''}${todayPnl.toFixed(0)}</div>
+      <div class="stat-sub">${S.getTodayTrades().length} trades</div>
+    </div>
+    <div class="stat-card success">
+      <div class="stat-label">WINS</div>
+      <div class="stat-value">${wins}</div>
+      <div class="stat-sub">${S.getWinRate()}% win rate</div>
+    </div>
+    <div class="stat-card danger">
+      <div class="stat-label">LOSSES</div>
+      <div class="stat-value">${losses}</div>
+      <div class="stat-sub">${S.trades.length} total</div>
+    </div>
+  `;
+
+  document.getElementById('tradeCount').textContent = `${S.trades.length} RECORDS`;
+  renderEquityCurve();
+  renderTradeList();
+}
+
+function renderEquityCurve() {
+  const svg = document.getElementById('equitySvg');
+  if (!svg || !S.trades.length) { svg.innerHTML = ''; return; }
+  const pts = [];
+  let cum = 0;
+  const rev = [...S.trades].reverse();
+  rev.forEach((t, i) => {
+    cum += parseFloat(t.pnl || 0);
+    pts.push({ x: i, y: cum });
+  });
+  if (pts.length < 2) return;
+  const xs = pts.map(p => p.x);
+  const ys = pts.map(p => p.y);
+  const minX = Math.min(...xs), maxX = Math.max(...xs);
+  const minY = Math.min(...ys), maxY = Math.max(...ys);
+  const rangeY = maxY - minY || 1;
+  const rangeX = maxX - minX || 1;
+  const toSvg = (p) => ({
+    x: ((p.x - minX) / rangeX) * 280 + 10,
+    y: 55 - ((p.y - minY) / rangeY) * 50
+  });
+  const svgPts = pts.map(toSvg);
+  const d = svgPts.map((p, i) => (i === 0 ? `M${p.x},${p.y}` : `L${p.x},${p.y}`)).join(' ');
+  const fillD = d + ` L${svgPts[svgPts.length-1].x},60 L${svgPts[0].x},60 Z`;
+  const isPos = pts[pts.length-1].y >= 0;
+  const col = isPos ? '#00ff88' : '#ff4444';
+  svg.innerHTML = `
+    <defs>
+      <linearGradient id="eq" x1="0" y1="0" x2="0" y2="1">
+        <stop offset="0%" stop-color="${col}" stop-opacity="0.3"/>
+        <stop offset="100%" stop-color="${col}" stop-opacity="0"/>
+      </linearGradient>
+    </defs>
+    <path d="${fillD}" fill="url(#eq)"/>
+    <path d="${d}" stroke="${col}" stroke-width="1.5" fill="none"/>
+  `;
+}
+
+function renderTradeList() {
+  const list = document.getElementById('tradeList');
+  if (!S.trades.length) {
+    list.innerHTML = '<div class="empty-state"><div>--</div>NO TRADES LOGGED</div>';
+    return;
+  }
+  list.innerHTML = S.trades.map(t => {
+    const pnl = parseFloat(t.pnl || 0);
+    const cls = pnl > 0 ? 'profit' : pnl < 0 ? 'loss' : 'breakeven';
+    const pnlCls = pnl >= 0 ? 'pos' : 'neg';
+    const moodColors = { focused:'#00d4ff', confident:'#00ff88', anxious:'#ffd700', fomo:'#ff8c00', revenge:'#ff4444' };
+    return `
+      <div class="trade-item ${cls}">
+        <div class="trade-header">
+          <div>
+            <div class="trade-ticker">${t.ticker || '--'} <span style="font-size:11px;color:var(--text3)">${t.dir || ''}</span></div>
+          </div>
+          <div style="display:flex;align-items:center;gap:8px">
+            <div class="trade-pnl ${pnlCls}">${pnl >= 0 ? '+' : ''}$${Math.abs(pnl).toFixed(2)}</div>
+            <button class="delete-btn" onclick="deleteTrade(${t.id})">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round">
+                <line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line>
+              </svg>
+            </button>
+          </div>
+        </div>
+        <div class="trade-tags">
+          ${t.setup ? `<span class="tag">${t.setup}</span>` : ''}
+          ${t.rMultiple ? `<span class="tag">${t.rMultiple}R</span>` : ''}
+          ${t.mood ? `<span class="tag" style="color:${moodColors[t.mood]||'var(--text3)'};border-color:${moodColors[t.mood]||'var(--border2)'}40">${t.mood.toUpperCase()}</span>` : ''}
+        </div>
+        ${t.notes ? `<div class="trade-note">${t.notes}</div>` : ''}
+        <div class="trade-date">${t.date}</div>
+      </div>
+    `;
+  }).join('');
+}
+
+// ============================================================
+//  RENDER STATS
+// ============================================================
+function renderStats() {
+  const totalComp = Object.keys(S.completions).length;
+  const bestStreak = Math.max(0, ...S.tasks.map(t => t.streak));
+  const avgPnl = S.trades.length ? (S.getTotalPnl() / S.trades.length).toFixed(2) : 0;
+  const avgWin = S.trades.filter(t => parseFloat(t.pnl) > 0).length
+    ? (S.trades.filter(t => parseFloat(t.pnl) > 0).reduce((a,t) => a+parseFloat(t.pnl), 0) / S.trades.filter(t => parseFloat(t.pnl) > 0).length).toFixed(2)
+    : 0;
+
+  document.getElementById('statsGrid').innerHTML = `
+    <div class="stat-card accent">
+      <div class="stat-label">COMPLETIONS</div>
+      <div class="stat-value">${totalComp}</div>
+      <div class="stat-sub">all time</div>
+    </div>
+    <div class="stat-card gold">
+      <div class="stat-label">BEST STREAK</div>
+      <div class="stat-value">${bestStreak}</div>
+      <div class="stat-sub">consecutive days</div>
+    </div>
+    <div class="stat-card ${parseFloat(avgPnl) >= 0 ? 'success' : 'danger'}">
+      <div class="stat-label">AVG PNL</div>
+      <div class="stat-value" style="font-size:22px">${parseFloat(avgPnl) >= 0 ? '+' : ''}$${avgPnl}</div>
+      <div class="stat-sub">per trade</div>
+    </div>
+    <div class="stat-card success">
+      <div class="stat-label">AVG WIN</div>
+      <div class="stat-value" style="font-size:22px">+$${avgWin}</div>
+      <div class="stat-sub">avg winner</div>
+    </div>
+  `;
+
+  // Task breakdown
+  const bd = document.getElementById('taskBreakdown');
+  if (!S.tasks.length) {
+    bd.innerHTML = '<div class="empty-state" style="padding:16px"><div>--</div>NO TASKS</div>';
+  } else {
+    bd.innerHTML = S.tasks.map(t => {
+      const total = Object.keys(S.completions).filter(k => k.startsWith(t.id + '_')).length;
+      const pct = Math.min(100, Math.round((total / (t.target || 30)) * 100));
+      return `
+        <div class="card" style="margin-bottom:8px">
+          <div style="display:flex;justify-content:space-between;margin-bottom:6px">
+            <div style="font-weight:600;font-size:14px">${t.name}</div>
+            <div style="font-family:var(--font-head);font-size:10px;color:var(--arc)">${total}/${t.target} DAYS</div>
+          </div>
+          <div class="progress-bar">
+            <div class="progress-fill" style="width:${pct}%"></div>
+          </div>
+          <div style="display:flex;justify-content:space-between;margin-top:5px">
+            <div style="font-size:11px;color:var(--text3)">Streak: ${t.streak}d</div>
+            <div style="font-size:11px;color:var(--arc);font-family:var(--font-head)">${pct}%</div>
+          </div>
+        </div>
+      `;
+    }).join('');
+  }
+
+  // Trading history
+  const moodMap = {};
+  S.trades.forEach(t => {
+    if (t.mood) moodMap[t.mood] = (moodMap[t.mood] || 0) + 1;
+  });
+  const topMood = Object.entries(moodMap).sort((a,b)=>b[1]-a[1])[0];
+  document.getElementById('statsTrading').innerHTML = `
+    <div class="card">
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+        <div>
+          <div class="stat-label" style="margin-bottom:4px">TOTAL TRADES</div>
+          <div style="font-family:var(--font-head);font-size:20px;color:var(--arc)">${S.trades.length}</div>
+        </div>
+        <div>
+          <div class="stat-label" style="margin-bottom:4px">WIN RATE</div>
+          <div style="font-family:var(--font-head);font-size:20px;color:var(--success)">${S.getWinRate()}%</div>
+        </div>
+        <div>
+          <div class="stat-label" style="margin-bottom:4px">TOTAL PNL</div>
+          <div style="font-family:var(--font-head);font-size:20px;color:${S.getTotalPnl()>=0?'var(--success)':'var(--danger)'}">${S.getTotalPnl()>=0?'+':''}$${S.getTotalPnl().toFixed(2)}</div>
+        </div>
+        <div>
+          <div class="stat-label" style="margin-bottom:4px">TOP MOOD</div>
+          <div style="font-family:var(--font-head);font-size:16px;color:var(--text2)">${topMood ? topMood[0].toUpperCase() : '--'}</div>
+        </div>
+      </div>
+    </div>
+  `;
+}
+
+// ============================================================
+//  ACTIONS
+// ============================================================
+function toggleTask(id) {
+  S.toggleTask(id);
+  renderDashboard();
+  showToast(S.taskDoneToday(id) ? 'MISSION COMPLETE' : 'TASK RESET');
+}
+
+function deleteTask(id) {
+  S.deleteTask(id);
+  renderDashboard();
+  renderTasks();
+  showToast('TASK TERMINATED');
+}
+
+function deleteTrade(id) {
+  S.deleteTrade(id);
+  renderTrading();
+  showToast('TRADE DELETED');
+}
+
+// ============================================================
+//  MODALS
+// ============================================================
+function openAddTask() {
+  document.getElementById('taskNameInput').value = '';
+  document.getElementById('taskTarget').value = '';
+  document.getElementById('taskCategory').value = 'fitness';
+  document.querySelectorAll('.chip').forEach(c => c.classList.remove('selected'));
+  document.querySelector('.chip[data-freq="daily"]').classList.add('selected');
+  selectedFreq = 'daily';
+  openModal('modalTask');
+}
+
+function openAddTrade() {
+  document.getElementById('tradeTicker').value = '';
+  document.getElementById('tradePnl').value = '';
+  document.getElementById('tradeR').value = '';
+  document.getElementById('tradeSetup').value = '';
+  document.getElementById('tradeNotes').value = '';
+  document.getElementById('tradeDir').value = 'LONG';
+  document.querySelectorAll('.mood-btn').forEach(b => b.classList.remove('selected'));
+  selectedMood = '';
+  openModal('modalTrade');
+}
+
+function openModal(id) {
+  document.getElementById(id).classList.add('open');
+}
+
+function closeModal(id) {
+  document.getElementById(id).classList.remove('open');
+}
+
+// Close on overlay click
+document.querySelectorAll('.modal-overlay').forEach(o => {
+  o.addEventListener('click', (e) => {
+    if (e.target === o) closeModal(o.id);
+  });
+});
+
+function selectFreq(el) {
+  document.querySelectorAll('.chip').forEach(c => c.classList.remove('selected'));
+  el.classList.add('selected');
+  selectedFreq = el.dataset.freq;
+}
+
+function selectMood(el) {
+  document.querySelectorAll('.mood-btn').forEach(b => b.classList.remove('selected'));
+  el.classList.add('selected');
+  selectedMood = el.dataset.mood;
+}
+
+function saveTask() {
+  const name = document.getElementById('taskNameInput').value.trim();
+  if (!name) { showToast('NAME REQUIRED'); return; }
+  const cat = document.getElementById('taskCategory').value;
+  const target = document.getElementById('taskTarget').value || '30';
+  S.addTask(name, cat, selectedFreq, target);
+  closeModal('modalTask');
+  renderDashboard();
+  renderTasks();
+  showToast('TASK INITIATED');
+}
+
+function saveTrade() {
+  const ticker = document.getElementById('tradeTicker').value.trim().toUpperCase();
+  if (!ticker) { showToast('TICKER REQUIRED'); return; }
+  const pnl = parseFloat(document.getElementById('tradePnl').value) || 0;
+  const rMultiple = document.getElementById('tradeR').value;
+  const setup = document.getElementById('tradeSetup').value.trim();
+  const notes = document.getElementById('tradeNotes').value.trim();
+  const dir = document.getElementById('tradeDir').value;
+  S.addTrade({ ticker, pnl, rMultiple, setup, notes, mood: selectedMood, dir });
+  closeModal('modalTrade');
+  renderTrading();
+  showToast('TRADE RECORDED');
+}
+
+// ============================================================
+//  TOAST
+// ============================================================
+let toastTimer;
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => t.classList.remove('show'), 2200);
+}
+
+// ============================================================
+//  JARVIS AI
+// ============================================================
+function jarvisAsk() {
+  const input = document.getElementById('jarvisInput');
+  const q = input.value.trim();
+  if (!q) return;
+  addMsg(q, 'user');
+  input.value = '';
+  setTimeout(() => {
+    const response = jarvisRespond(q.toLowerCase());
+    addMsg(response, 'jarvis');
+  }, 400);
+}
+
+document.getElementById('jarvisInput').addEventListener('keydown', (e) => {
+  if (e.key === 'Enter') jarvisAsk();
+});
+
+function addMsg(text, who) {
+  const msgs = document.getElementById('jarvisMessages');
+  const div = document.createElement('div');
+  div.className = `msg ${who}`;
+  div.textContent = text;
+  msgs.appendChild(div);
+  msgs.scrollTop = msgs.scrollHeight;
+}
+
+// ============================================================
+//  JARVIS AI WITH GEMINI
+// ============================================================
+const GEMINI_API_KEY = 'AIzaSyBd8yBGxg3w-IJgqyUL66-rZSnJvnbjpeU'; // ← PASTE YOUR KEY HERE
+
+async function jarvisAsk() {
+  const input = document.getElementById('jarvisInput');
+  const q = input.value.trim();
+  if (!q) return;
+  addMsg(q, 'user');
+  input.value = '';
+
+  // Show typing indicator
+  const msgs = document.getElementById('jarvisMessages');
+  const typingDiv = document.createElement('div');
+  typingDiv.className = 'msg jarvis';
+  typingDiv.textContent = '...';
+  typingDiv.id = 'typingIndicator';
+  msgs.appendChild(typingDiv);
+  msgs.scrollTop = msgs.scrollHeight;
+
+  try {
+    const response = await callGemini(q);
+    document.getElementById('typingIndicator')?.remove();
+    addMsg(response, 'jarvis');
+  } catch (err) {
+    document.getElementById('typingIndicator')?.remove();
+    addMsg('System error, sir. Please try again.', 'jarvis');
+    console.error(err);
+  }
+}
+
+async function callGemini(prompt) {
+  // Build context from your data
+  const today = S.today();
+  const todayTrades = S.getTodayTrades();
+  const todayPnl = S.getTodayPnl();
+  const todayTasks = S.getTodayTasks();
+  const doneTasks = todayTasks.filter(t => S.taskDoneToday(t.id));
+  const totalPnl = S.getTotalPnl();
+  const winRate = S.getWinRate();
+  const bestStreak = Math.max(0, ...S.tasks.map(t => t.streak));
+
+  const systemPrompt = `You are JARVIS, Tony Stark's AI assistant. You respond concisely and respectfully, calling the user "sir". Current data:
+- Tasks today: ${doneTasks.length}/${todayTasks.length} done
+- Today's PnL: $${todayPnl.toFixed(2)}
+- All-time PnL: $${totalPnl.toFixed(2)}
+- Win rate: ${winRate}%
+- Best streak: ${bestStreak} days
+- Total trades: ${S.trades.length}
+
+Keep responses under 3 sentences unless asked for detail. Be helpful, confident, and slightly futuristic.`;
+
+  const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${GEMINI_API_KEY}`;
+
+  const res = await fetch(url, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      contents: [{
+        parts: [{
+          text: `${systemPrompt}\n\nUser: ${prompt}`
+        }]
+      }]
+    })
+  });
+
+  const data = await res.json();
+  return data.candidates?.[0]?.content?.parts?.[0]?.text || 'I could not process that, sir.';
+}
+
+  // Task / schedule
+  if (q.includes('gym') || q.includes('workout')) {
+    const gymTask = S.tasks.find(t => t.name.toLowerCase().includes('gym') || t.category === 'fitness');
+    if (!gymTask) return "I don't see a gym task in your schedule, sir. Shall I remind you to add one?";
+    const done = S.taskDoneToday(gymTask.id);
+    return `Your gym task is "${gymTask.name}". Today: ${done ? 'COMPLETE. Excellent discipline, sir.' : 'NOT YET DONE. Get moving!'}. Current streak: ${gymTask.streak} days.`;
+  }
+
+  if (q.includes('schedule') || q.includes('tasks') || q.includes('today')) {
+    if (!todayTasks.length) return "You have no tasks scheduled for today, sir.";
+    return `Today's tasks: ${doneTasks.length}/${todayTasks.length} complete. Pending: ${todayTasks.filter(t => !S.taskDoneToday(t.id)).map(t=>t.name).join(', ') || 'none'}. Well done, sir.`;
+  }
+
+  if (q.includes('streak')) {
+    return `Your best current streak is ${bestStreak} days, sir. ${bestStreak >= 7 ? 'Impressive consistency.' : 'Keep pushing to build momentum.'}`;
+  }
+
+  if (q.includes('how am i') || q.includes('status') || q.includes('report')) {
+    return `Status report: ${doneTasks.length}/${todayTasks.length} tasks done. Today's PnL: ${todayPnl>=0?'+':''}$${todayPnl.toFixed(2)}. Win rate: ${S.getWinRate()}%. Best streak: ${bestStreak}d. ${doneTasks.length === todayTasks.length && todayTasks.length > 0 ? 'All systems green, sir.' : 'Some tasks still pending.'}`;
+  }
+
+  if (q.includes('last trade') || q.includes('recent trade')) {
+    if (!S.trades.length) return "No trades on record yet, sir.";
+    const t = S.trades[0];
+    const pnl = parseFloat(t.pnl);
+    return `Your most recent trade: ${t.ticker} ${t.dir} on ${t.date}. PnL: ${pnl>=0?'+':''}$${pnl.toFixed(2)}. ${t.mood ? 'Emotional state: ' + t.mood + '.' : ''} ${t.notes ? '"' + t.notes.slice(0,80) + '..."' : ''}`;
+  }
+
+  if (q.includes('hello') || q.includes('hi') || q.includes('hey')) {
+    return `Hello, sir. All systems are operational. You have ${todayTasks.length - doneTasks.length} pending task(s) today. How can I assist you?`;
+  }
+
+  if (q.includes('motivat') || q.includes('inspire')) {
+    const phrases = [
+      "Every champion was once a contender who refused to give up, sir.",
+      "The market rewards preparation and punishes impulsivity. Stay the course.",
+      "Discipline is the bridge between goals and accomplishment.",
+      "Your streak does not lie. Keep it alive.",
+      "The best traders are not the ones who never lose. They are the ones who lose small and win big."
+    ];
+    return phrases[Math.floor(Math.random() * phrases.length)];
+  }
+
+  if (q.includes('how many trades') || q.includes('trade count')) {
+    return `You have logged ${S.trades.length} total trades, with ${S.trades.filter(t=>parseFloat(t.pnl)>0).length} winners and ${S.trades.filter(t=>parseFloat(t.pnl)<0).length} losers, sir.`;
+  }
+
+  return "I did not fully understand that query, sir. Try asking about your trades, PnL, tasks, schedule, streak, or win rate.";
+}
+
+// ============================================================
+//  INITIAL RENDER
+// ============================================================
+renderDashboard();
+</script>
+</body>
+</html>
