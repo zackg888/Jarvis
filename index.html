@@ -408,6 +408,11 @@
         </div>
       </div>
 
+      <div style="display:flex;gap:8px;margin-bottom:16px">
+        <button class="btn btn-ghost" style="flex:1;padding:8px;font-size:8px" onclick="exportSync()">⬇ EXPORT</button>
+        <button class="btn btn-ghost" style="flex:1;padding:8px;font-size:8px" onclick="importSync()">⬆ IMPORT</button>
+      </div>
+
       <div class="section-header">
         <div class="section-title">Today's Status</div>
         <div style="font-family:var(--font-head);font-size:9px;letter-spacing:2px;color:var(--text3)" id="todayDateSmall"></div>
@@ -1117,26 +1122,77 @@ Keep responses under 3 sentences unless asked for detail. Be helpful, confident,
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({
-      temperature: 0.35,
-      candidateCount: 1,
-      responseFormat: { type: 'text' },
-      instances: [
+      contents: [
         {
-          content: [
-            { type: 'text', text: `${systemPrompt}\n\nUser: ${prompt}` }
-          ]
+          role: 'user',
+          parts: [{ text: `${systemPrompt}\n\nUser: ${prompt}` }]
         }
-      ]
+      ],
+      generationConfig: {
+        temperature: 0.35,
+        topP: 0.8,
+        topK: 40,
+        maxOutputTokens: 500
+      }
     })
   });
 
+  if (!res.ok) {
+    const errData = await res.json();
+    console.error('Gemini API error:', errData);
+    throw new Error(errData.error?.message || `API error: ${res.status}`);
+  }
+
   const data = await res.json();
-  const text = data.candidates?.[0]?.content?.[0]?.text
-    || data.candidates?.[0]?.content?.parts?.[0]?.text
-    || data.output?.text
-    || (Array.isArray(data.output?.content) && data.output.content[0]?.text)
-    || 'I could not process that, sir.';
+  const text = data.candidates?.[0]?.content?.parts?.[0]?.text || 'I could not process that, sir.';
   return text;
+}
+
+function exportSync() {
+  const state = { tasks: S.tasks, trades: S.trades, completions: S.completions, ts: Date.now() };
+  const json = JSON.stringify(state, null, 2);
+  const blob = new Blob([json], { type: 'application/json' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `jarvis-backup-${new Date().toISOString().slice(0,10)}.json`;
+  a.click();
+  URL.revokeObjectURL(url);
+  showToast('BACKUP EXPORTED');
+}
+
+function importSync() {
+  const input = document.createElement('input');
+  input.type = 'file';
+  input.accept = '.json';
+  input.onchange = (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = (evt) => {
+      try {
+        const data = JSON.parse(evt.target.result);
+        if (data.tasks && data.trades !== undefined && data.completions) {
+          S.applyUpdate('jar_tasks', data.tasks);
+          S.applyUpdate('jar_trades', data.trades);
+          S.applyUpdate('jar_completions', data.completions);
+          localStorage.setItem('jar_tasks', JSON.stringify(data.tasks));
+          localStorage.setItem('jar_trades', JSON.stringify(data.trades));
+          localStorage.setItem('jar_completions', JSON.stringify(data.completions));
+          rerenderCurrent();
+          showToast('DATA IMPORTED');
+        } else {
+          showToast('INVALID FORMAT');
+        }
+      } catch (err) {
+        console.error('Import parse error:', err);
+        showToast('IMPORT FAILED');
+      }
+    };
+    reader.readAsText(file);
+  };
+  input.click();
+}
 }
 
 renderDashboard();
